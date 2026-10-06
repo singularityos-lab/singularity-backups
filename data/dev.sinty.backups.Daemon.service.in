@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=dev.sinty.backups.Daemon
+Exec=@libexecdir@/singularity-backups-daemon --gapplication-service

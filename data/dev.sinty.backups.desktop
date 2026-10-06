@@ -1,0 +1,19 @@
+[Desktop Entry]
+Name=Backups
+Comment=Automatic backups of your files, with a way back to any moment
+Exec=singularity-backups
+Icon=dev.sinty.backups
+Terminal=false
+Type=Application
+Categories=GTK;Utility;Archiving;
+Keywords=backup;restore;time;history;snapshot;versions;copy;
+StartupWMClass=dev.sinty.backups
+Actions=back-up-now;browse;
+
+[Desktop Action back-up-now]
+Name=Back Up Now
+Exec=singularity-backups --back-up-now
+
+[Desktop Action browse]
+Name=Browse Backups
+Exec=singularity-backups --browse .

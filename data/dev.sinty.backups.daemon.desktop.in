@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Backups Scheduler
+Comment=Runs scheduled backups in the background
+Exec=@libexecdir@/singularity-backups-daemon --gapplication-service
+Icon=dev.sinty.backups
+NoDisplay=true
+X-GNOME-AutoRestart=false

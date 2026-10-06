@@ -1,0 +1,73 @@
+{
+    "schema-id": "dev.sinty.backups",
+    "settings": [
+        {
+            "key": "frequency",
+            "label": "Back Up",
+            "type": "string",
+            "widget": "combo",
+            "options": [
+                { "id": "hourly", "label": "Every Hour" },
+                { "id": "daily", "label": "Every Day" },
+                { "id": "weekly", "label": "Every Week" },
+                { "id": "manual", "label": "Only When I Ask" }
+            ]
+        },
+        {
+            "key": "retention",
+            "label": "Keep",
+            "type": "string",
+            "widget": "combo",
+            "options": [
+                { "id": "smart", "label": "Hourly, Daily and Weekly Backups", "subtitle": "Every hour for a day, every day for a month, every week before that" },
+                { "id": "keep-last", "label": "A Fixed Number of Backups", "subtitle": "The oldest are deleted first" }
+            ]
+        },
+        {
+            "key": "keep-last",
+            "label": "Backups to Keep",
+            "subtitle": "Used when Keep is set to a fixed number; the oldest also go when the disk gets full",
+            "type": "int",
+            "widget": "spin",
+            "min": 1,
+            "max": 1000
+        },
+        {
+            "key": "deduplicate",
+            "label": "Store Identical Files Once",
+            "subtitle": "Copies of the same file take no extra space",
+            "type": "boolean",
+            "widget": "toggle"
+        },
+        {
+            "key": "encrypt-remote",
+            "label": "Encrypt Online Backups",
+            "subtitle": "New backups in online accounts are encrypted with a passphrase only you know",
+            "type": "boolean",
+            "widget": "toggle"
+        },
+        {
+            "key": "pause-on-battery",
+            "label": "Pause on Low Battery",
+            "subtitle": "Automatic backups wait until the computer is plugged in or charged again",
+            "type": "boolean",
+            "widget": "toggle"
+        },
+        {
+            "key": "battery-threshold",
+            "label": "Low Battery Level",
+            "subtitle": "Percent of charge under which automatic backups pause",
+            "type": "int",
+            "widget": "spin",
+            "min": 5,
+            "max": 90
+        },
+        {
+            "key": "notify-completed",
+            "label": "Notify When a Backup Finishes",
+            "subtitle": "Only for backups you start yourself; failures are always shown",
+            "type": "boolean",
+            "widget": "toggle"
+        }
+    ]
+}

@@ -1,0 +1,6 @@
+[Backup Destination]
+Name=Online Accounts
+Description=Google Drive, OneDrive, Nextcloud and other accounts with Files switched on
+Icon=folder-cloud
+Exec=@LIBEXECDIR@/singularity-backups-cloud
+Protocol=1

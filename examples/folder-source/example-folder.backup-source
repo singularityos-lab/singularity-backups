@@ -1,0 +1,6 @@
+[Backup Source]
+Name=Game Saves
+Description=Saved games of the example launcher, put back when you restore
+Icon=folder
+Exec=example-folder.sh
+Protocol=1

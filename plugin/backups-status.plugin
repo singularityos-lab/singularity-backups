@@ -1,0 +1,8 @@
+[Plugin]
+Module=backups-status
+Name=Backups Status
+Description=A quick settings tile for Backups and a top bar indicator while a backup runs
+Authors=Singularity Team
+Copyright=Copyright © 2026 Singularity Team
+Website=https://sinty.dev
+X-Singularity-App=dev.sinty.backups

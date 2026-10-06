@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="singularity-backups">
+  <enum id="dev.sinty.backups.Frequency">
+    <value nick="hourly" value="0"/>
+    <value nick="daily" value="1"/>
+    <value nick="weekly" value="2"/>
+    <value nick="manual" value="3"/>
+  </enum>
+  <enum id="dev.sinty.backups.Retention">
+    <value nick="smart" value="0"/>
+    <value nick="keep-last" value="1"/>
+  </enum>
+  <schema id="dev.sinty.backups" path="/dev/sinty/backups/">
+    <key name="destination-kind" type="s">
+      <default>''</default>
+      <summary>Kind of backup destination: disk, folder, network, cloud or plugin</summary>
+    </key>
+    <key name="destination-id" type="s">
+      <default>''</default>
+      <summary>File system UUID of the backup disk</summary>
+    </key>
+    <key name="destination-path" type="s">
+      <default>''</default>
+      <summary>Folder or mounted network share that holds the backups</summary>
+    </key>
+    <key name="destination-name" type="s">
+      <default>''</default>
+      <summary>Name of the backup destination shown to the user</summary>
+    </key>
+    <key name="destination-encrypted" type="b">
+      <default>false</default>
+      <summary>Whether the backup disk is encrypted</summary>
+    </key>
+    <key name="destination-plugin" type="s">
+      <default>''</default>
+      <summary>Destination plugin that stores the backups when the kind is plugin</summary>
+    </key>
+    <key name="destination-target" type="s">
+      <default>''</default>
+      <summary>Target inside the destination plugin, such as an online account</summary>
+    </key>
+    <key name="destination-repository" type="s">
+      <default>''</default>
+      <summary>Name of the backup set to use at the destination; empty means this computer</summary>
+    </key>
+    <key name="encrypt-remote" type="b">
+      <default>true</default>
+      <summary>Encrypt backups kept in online accounts and other remote destinations</summary>
+    </key>
+    <key name="providers" type="as">
+      <default>['userdata', 'flatpak']</default>
+      <summary>What to back up</summary>
+    </key>
+    <key name="exclusions" type="as">
+      <default>['.cache', '.local/share/Trash', '.var/app/*/cache', 'node_modules', '.tmp', '*.tmp', '*.part', '*.crdownload']</default>
+      <summary>Files and folders that are never backed up</summary>
+      <description>Names match anywhere, a leading slash anchors a path to the home folder, and * and ? work as wildcards.</description>
+    </key>
+    <key name="frequency" enum="dev.sinty.backups.Frequency">
+      <default>'hourly'</default>
+      <summary>How often to back up</summary>
+    </key>
+    <key name="retention" enum="dev.sinty.backups.Retention">
+      <default>'smart'</default>
+      <summary>Which backups to keep</summary>
+      <description>smart keeps hourly backups for a day, daily backups for a month and weekly backups before that, plus always the latest; keep-last keeps the number of backups in keep-last.</description>
+    </key>
+    <key name="keep-last" type="i">
+      <range min="1" max="1000"/>
+      <default>48</default>
+      <summary>Number of backups to keep when retention is keep-last</summary>
+    </key>
+    <key name="deduplicate" type="b">
+      <default>true</default>
+      <summary>Store identical files only once</summary>
+    </key>
+    <key name="pause-on-battery" type="b">
+      <default>true</default>
+      <summary>Pause automatic backups when the battery is low</summary>
+    </key>
+    <key name="battery-threshold" type="i">
+      <range min="5" max="90"/>
+      <default>20</default>
+      <summary>Battery level in percent under which automatic backups pause while on battery</summary>
+    </key>
+    <key name="notify-completed" type="b">
+      <default>true</default>
+      <summary>Notify when a backup you started finishes</summary>
+    </key>
+    <key name="start-delay" type="i">
+      <default>300</default>
+      <summary>Seconds to wait after login before a backup that is due</summary>
+    </key>
+  </schema>
+</schemalist>

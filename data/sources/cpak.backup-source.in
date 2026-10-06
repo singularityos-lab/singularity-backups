@@ -1,0 +1,6 @@
+[Backup Source]
+Name=cpak Apps
+Description=Installed cpak apps and their data, reinstalled when you restore
+Icon=package-x-generic
+Exec=@LIBEXECDIR@/singularity-backups-cpak
+Protocol=1
