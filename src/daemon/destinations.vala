@@ -205,7 +205,9 @@ namespace Singularity.Backups {
                                   str (drive, IFACE_DRIVE, "ConnectionBus") == "usb";
                     string vendor = str (drive, IFACE_DRIVE, "Vendor").strip ();
                     string model = str (drive, IFACE_DRIVE, "Model").strip ();
-                    if (label == "") label = model != "" ? (vendor != "" && !model.has_prefix (vendor) ? vendor + " " + model : model) : vendor;
+                    if (label == "" && model == "") label = vendor;
+                    else if (label == "" && vendor != "" && !model.has_prefix (vendor)) label = vendor + " " + model;
+                    else if (label == "") label = model;
                 }
                 d.name = label != "" ? label : GLib.format_size (d.size) + " " + _("Disk");
                 d.has_backups = holds_backups (d.mount_point);
