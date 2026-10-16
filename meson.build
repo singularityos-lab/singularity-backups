@@ -115,6 +115,7 @@ install_data('data/backups.conf',
 )
 
 gtk_dep = dependency('gtk4')
+m_dep = meson.get_compiler('c').find_library('m', required: false)
 libsingularity_dep = dependency('singularity-1.0',
   fallback: ['libsingularity', 'libsingularity_dep']
 )
@@ -140,7 +141,7 @@ executable('singularity-backups',
     'src/common/client.vala',
     config_vapi,
   ],
-  dependencies: [engine_dep, gtk_dep, libsingularity_dep],
+  dependencies: [engine_dep, gtk_dep, m_dep, libsingularity_dep],
   include_directories: config_inc,
   install: true,
 )
