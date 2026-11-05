@@ -131,6 +131,7 @@ namespace Singularity.Backups {
             menu.append (_("Restore Everything From This Backup…"), "tt.restore-all");
             menu.append (_("Quick Look"), "tt.preview");
             more_button.menu_model = menu;
+            more_button.popover.add_css_class ("singularity-app-menu");
             bar.append (more_button);
             restore_button = new Button.with_label (_("Restore"));
             restore_button.add_css_class ("pill");
