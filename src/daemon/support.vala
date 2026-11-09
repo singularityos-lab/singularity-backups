@@ -4,16 +4,18 @@ namespace Singularity.Backups {
 
     public async void in_thread (owned WorkFunc func) throws Error {
         Error? failure = null;
-        SourceFunc resume = in_thread.callback;
-        new Thread<void> ("backups-worker", () => {
-            try {
-                func ();
-            } catch (Error e) {
-                failure = e;
-            }
-            Idle.add ((owned) resume);
-        });
-        yield;
+        try {
+            yield Async.run<bool>((c) => {
+                try {
+                    func ();
+                } catch (Error e) {
+                    failure = e;
+                }
+                return true;
+            }, Async.Qos.USER);
+        } catch (Error e) {
+            warning("%s", e.message);
+        }
         if (failure != null) throw failure;
     }
 
