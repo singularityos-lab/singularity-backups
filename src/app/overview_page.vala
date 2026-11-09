@@ -223,6 +223,41 @@ namespace Singularity.Backups {
             }
         }
 
+        private Singularity.BackgroundWork? daemon_work = null;
+        private bool asking_pid = false;
+
+        private void follow_daemon (bool running) {
+            if (!running) {
+                if (daemon_work != null) daemon_work.unfollow ();
+                return;
+            }
+            if (daemon_work != null) {
+                daemon_work.follow (ring);
+                return;
+            }
+            if (asking_pid) return;
+            asking_pid = true;
+            Bus.get.begin (BusType.SESSION, null, (o, r) => {
+                try {
+                    var bus = Bus.get.end (r);
+                    bus.call.begin ("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+                        "GetConnectionUnixProcessID", new Variant ("(s)", DAEMON_NAME), new VariantType ("(u)"),
+                        DBusCallFlags.NONE, -1, null, (o2, r2) => {
+                            asking_pid = false;
+                            try {
+                                uint32 pid;
+                                bus.call.end (r2).get ("(u)", out pid);
+                                daemon_work = Singularity.BackgroundWork.for_process ((Pid) pid);
+                                refresh_state ();
+                            } catch (Error e) {
+                            }
+                        });
+                } catch (Error e) {
+                    asking_pid = false;
+                }
+            });
+        }
+
         public void refresh_state () {
             var d = app.daemon;
             if (d == null) return;
@@ -236,6 +271,7 @@ namespace Singularity.Backups {
             } else {
                 waiting_banner.title = _("Waiting for “%s”. The backup starts as soon as it is available.").printf (d.destination_name);
             }
+            follow_daemon (running);
             ring.fraction = running || state == "paused" ? d.fraction : 1.0;
             ring.remove_css_class ("backups-ring-error");
             ring.remove_css_class ("backups-ring-idle");

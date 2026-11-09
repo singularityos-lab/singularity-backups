@@ -74,6 +74,17 @@ executable('backups-perf',
 )
 
 
+gtk_dep = dependency('gtk4')
+m_dep = meson.get_compiler('c').find_library('m', required: false)
+libsingularity_dep = dependency('singularity-1.0',
+  fallback: ['libsingularity', 'libsingularity_dep']
+)
+
+if not meson.is_subproject() and libsingularity_dep.type_name() == 'internal'
+  libsingularity_vapi_dir = join_paths(meson.project_build_root(), 'subprojects', 'libsingularity')
+  add_project_arguments(['--vapidir=' + libsingularity_vapi_dir], language: 'vala')
+endif
+
 executable('singularity-backups-daemon',
   [
     'src/daemon/main.vala',
@@ -83,7 +94,7 @@ executable('singularity-backups-daemon',
     'src/daemon/power.vala',
     config_vapi,
   ],
-  dependencies: [engine_dep, secret_dep],
+  dependencies: [engine_dep, secret_dep, libsingularity_dep],
   include_directories: config_inc,
   install: true,
   install_dir: get_option('libexecdir'),
@@ -113,17 +124,6 @@ install_data('data/dev.sinty.backups.gschema.xml',
 install_data('data/backups.conf',
   install_dir: get_option('datadir') / 'singularity'
 )
-
-gtk_dep = dependency('gtk4')
-m_dep = meson.get_compiler('c').find_library('m', required: false)
-libsingularity_dep = dependency('singularity-1.0',
-  fallback: ['libsingularity', 'libsingularity_dep']
-)
-
-if not meson.is_subproject() and libsingularity_dep.type_name() == 'internal'
-  libsingularity_vapi_dir = join_paths(meson.project_build_root(), 'subprojects', 'libsingularity')
-  add_project_arguments(['--vapidir=' + libsingularity_vapi_dir], language: 'vala')
-endif
 
 executable('singularity-backups',
   [

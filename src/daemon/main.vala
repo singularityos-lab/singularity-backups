@@ -53,6 +53,7 @@ namespace Singularity.Backups {
             Intl.bind_textdomain_codeset ("singularity-backups", "UTF-8");
             Intl.textdomain ("singularity-backups");
             Environment.set_prgname ("singularity-backups-daemon");
+            Singularity.BackgroundWork.lower ();
             return new DaemonApp ().run (args);
         }
     }
