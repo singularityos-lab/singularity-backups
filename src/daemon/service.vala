@@ -755,6 +755,7 @@ namespace Singularity.Backups {
                 put_state (configured ? "idle" : "unconfigured");
                 set_progress (1, "done", "");
             }
+            report_drive_check (r);
             var t = new HashTable<string, Variant> (str_hash, str_equal);
             t["snapshot"] = id;
             t["checked"] = r.checked;
@@ -762,6 +763,14 @@ namespace Singularity.Backups {
             t["missing"] = new Variant.strv (r.missing);
             t["ok"] = r.ok;
             return t;
+        }
+
+        private void report_drive_check (VerifyResult r) {
+            if (settings.get_string ("destination-kind") != "disk") return;
+            var disk = dests.disk_for_uuid (settings.get_string ("destination-id"));
+            if (disk == null || disk.device == "") return;
+            string detail = r.ok ? "" : "%d damaged, %d missing".printf (r.damaged.length, r.missing.length);
+            Singularity.DriveHealth.report_backup.begin (disk.device, r.ok, detail);
         }
 
         public async void delete_snapshot (string snapshot) throws Error {

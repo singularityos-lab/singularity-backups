@@ -588,6 +588,17 @@ namespace Singularity.Backups {
             dest_rows.add (row);
         }
 
+        private void choose_destination (string id, string name, bool encrypted, bool locked) {
+            reset_remote ();
+            target = id;
+            target_name = name;
+            target_encrypted = encrypted;
+            target_locked = locked;
+            checks.foreach ((k, img) => img.visible = k == id);
+            sync_passphrase ();
+            update_commit ();
+        }
+
         private void add_destination_row (HashTable<string, Variant> d) {
             if (get_str (d, "kind") == "plugin") {
                 add_remote_row (d);
@@ -617,15 +628,32 @@ namespace Singularity.Backups {
                 checks[id] = check;
                 row.add_suffix (check);
                 row.activatable = true;
+                string device = get_str (d, "device");
+                DriveHealth? health = null;
+                if (kind == "disk" && device != "") {
+                    DriveHealth.lookup.begin (device, (o, res) => {
+                        health = DriveHealth.lookup.end (res);
+                        if (health != null && health.troubled) {
+                            row.subtitle = string.joinv (" · ", facts) + " · " + health.summary ();
+                            var mark = new Image.from_icon_name (health.icon_name ());
+                            mark.valign = Align.CENTER;
+                            row.add_suffix (mark);
+                        }
+                    });
+                }
                 row.activated.connect (() => {
-                    reset_remote ();
-                    target = id;
-                    target_name = name;
-                    target_encrypted = encrypted;
-                    target_locked = locked;
-                    checks.foreach ((k, img) => img.visible = k == id);
-                    sync_passphrase ();
-                    update_commit ();
+                    if (health != null && health.troubled && target != id) {
+                        var dialog = new ConfirmDialog (app, _("Keep Backups on “%s”?").printf (name), health.icon_name (),
+                            "%s\n\n%s".printf (health.explain (), _("Backups on this disk may be lost when you need them. Another disk is safer.")),
+                            _("Use Anyway"), ConfirmDialog.ActionStyle.DESTRUCTIVE);
+                        dialog.transient_for = (Gtk.Window) get_root ();
+                        dialog.response.connect ((answer) => {
+                            if (answer == ConfirmDialog.Response.PRIMARY) choose_destination (id, name, encrypted, locked);
+                        });
+                        dialog.present ();
+                        return;
+                    }
+                    choose_destination (id, name, encrypted, locked);
                 });
             }
             if (kind == "disk" && get_str (d, "object") != "") {
