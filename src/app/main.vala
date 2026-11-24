@@ -1,6 +1,6 @@
 namespace Singularity.Backups {
 
-    public class BackupsApp : Singularity.Application, Singularity.Migration.Migratable {
+    public class BackupsApp : Singularity.Application, Singularity.Migration.Migratable, Singularity.Startup.Bootable {
         public DaemonProxy? daemon { get; private set; default = null; }
         public GLib.Settings settings { get; private set; }
 
@@ -60,7 +60,7 @@ namespace Singularity.Backups {
             var browse_home = new SimpleAction ("browse-home", null);
             browse_home.activate.connect (() => {
                 pending_browse = "";
-                activate ();
+                show_window ();
             });
             add_action (browse_home);
             var back_up = new SimpleAction ("back-up-now", null);
@@ -74,7 +74,7 @@ namespace Singularity.Backups {
             });
             add_action (back_up);
             var show = new SimpleAction ("show", null);
-            show.activate.connect (() => activate ());
+            show.activate.connect (() => show_window ());
             add_action (show);
 
             set_accels_for_action ("app.settings", { "<Control>comma" });
@@ -106,14 +106,14 @@ namespace Singularity.Backups {
 
         private void open_uris (string[] uris, bool versions) {
             if (uris.length == 0) {
-                activate ();
+                show_window ();
                 return;
             }
             var file = File.new_for_uri (uris[0]);
             string rel = home_relative (file);
             if (versions) pending_versions = rel;
             else pending_browse = rel;
-            activate ();
+            show_window ();
         }
 
         protected override int command_line (ApplicationCommandLine command_line) {
@@ -133,7 +133,30 @@ namespace Singularity.Backups {
             return 0;
         }
 
-        protected override void activate () {
+        public Singularity.Startup.Plan build_plan (Singularity.Startup.Request request) {
+            var plan = new Singularity.Startup.Plan ();
+            plan.version = "backups-1";
+            if (request.kind == Singularity.Startup.RequestKind.SERVICE) {
+                plan.main ("ready", Singularity.Startup.Category.PREPARE, (c) => {})
+                    .reaches (Singularity.Startup.Milestone.SHELL_READY)
+                    .reaches (Singularity.Startup.Milestone.CONTENT_READY)
+                    .reaches (Singularity.Startup.Milestone.INTERACTIVE);
+                return plan;
+            }
+            plan.main ("window", Singularity.Startup.Category.SHELL, (c) => {
+                show_window ();
+                c.window = get_active_window ();
+            }).reaches (Singularity.Startup.Milestone.SHELL_READY)
+              .reaches (Singularity.Startup.Milestone.CONTENT_READY)
+              .reaches (Singularity.Startup.Milestone.INTERACTIVE);
+            return plan;
+        }
+
+        public void handle_request (Singularity.Startup.Request request) {
+            show_window ();
+        }
+
+        private void show_window () {
             if (window == null) adopt (new BackupsWindow (this));
             window.present ();
             if (pending_browse != null || pending_versions != null) {
