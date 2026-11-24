@@ -41,6 +41,8 @@ namespace Singularity.Backups {
         private float[] star_light = new float[STARS];
         private Gdk.RGBA accent = { 0.36f, 0.62f, 1.0f, 1.0f };
         private bool closing = false;
+        public string? resume_snapshot = null;
+        public bool started { get; private set; default = false; }
 
         public double position {
             get { return _position; }
@@ -247,18 +249,44 @@ namespace Singularity.Backups {
             card.latest_snapshot = items.size > 1 ? items[1].id : "";
             timeline.set_items (items);
             image_folder = folder;
-            selected = 0;
-            _position = 0;
-            timeline.selected = 0;
-            timeline.position = 0;
-            yield card.show_snapshot (items[0], folder, select);
+            int first = 0;
+            for (int i = 1; i < items.size; i++) {
+                if (resume_snapshot != null && items[i].id == resume_snapshot) first = i;
+            }
+            resume_snapshot = null;
+            selected = first;
+            _position = first;
+            timeline.selected = first;
+            timeline.position = first;
+            yield card.show_snapshot (items[first], folder, select);
             if (versions && select != null) yield load_versions (folder == "" ? select : folder + "/" + select);
             sync_actions ();
+            started = true;
             grab_focus ();
             card.focus_list ();
             intro = 0;
             var anim = Singularity.Motion.tween (this, "intro", 1.0, Singularity.Motion.Duration.SCENE.ms (), Singularity.Motion.Curve.EMPHASIZED);
             anim.reduced_mode = Singularity.Animation.ReducedMode.SHORTEN;
+        }
+
+        public Variant save_migration () {
+            var d = new VariantDict ();
+            var names = card.selected_items ();
+            string folder = card.folder;
+            string versions = version_ids.size > 0 ? versions_path : "";
+            d.insert_value ("path", new Variant.string (versions != "" ? versions : (names.size > 0 ? (folder == "" ? names[0].name : folder + "/" + names[0].name) : folder)));
+            d.insert_value ("versions", new Variant.boolean (versions != ""));
+            d.insert_value ("snapshot", new Variant.string (items.size > selected && !items[selected].live ? items[selected].id : ""));
+            d.insert_value ("changes-only", new Variant.boolean (card.changes_only));
+            d.insert_value ("show-hidden", new Variant.boolean (card.show_hidden));
+            return d.end ();
+        }
+
+        public void resume (Variant state) {
+            var d = new VariantDict (state);
+            resume_snapshot = d.lookup_value ("snapshot", VariantType.STRING).get_string ();
+            card.changes_only = d.lookup_value ("changes-only", VariantType.BOOLEAN).get_boolean ();
+            card.show_hidden = d.lookup_value ("show-hidden", VariantType.BOOLEAN).get_boolean ();
         }
 
         public async void open_at (string path, bool versions) {

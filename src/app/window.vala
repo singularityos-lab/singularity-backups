@@ -247,6 +247,45 @@ namespace Singularity.Backups {
             time_travel.start.begin (folder, select, versions);
         }
 
+        public Variant save_migration () {
+            var d = new VariantDict ();
+            string page = stack.visible_child_name ?? "";
+            d.insert_value ("page", new Variant.string (page));
+            d.insert_value ("from", new Variant.string (before_exclusions));
+            d.insert_value ("setup", new Variant.string (setup_page.setup_kind));
+            if (page == "timetravel" && time_travel != null) d.insert_value ("time-travel", time_travel.save_migration ());
+            return d.end ();
+        }
+
+        public async void restore_migration (Variant data) {
+            if (!app.daemon_checked) {
+                ulong id = app.daemon_ready.connect (() => restore_migration.callback ());
+                yield;
+                app.disconnect (id);
+            }
+            var d = new VariantDict (data);
+            string page = d.lookup_value ("page", VariantType.STRING).get_string ();
+            if (page == "setup") {
+                start_setup (d.lookup_value ("setup", VariantType.STRING).get_string ());
+            } else if (page == "exclusions") {
+                open_exclusions (d.lookup_value ("from", VariantType.STRING).get_string ());
+            } else if (page == "welcome" && app.daemon != null && app.daemon.configured) {
+                show_page ("welcome");
+            } else if (page == "timetravel") {
+                var tt = new VariantDict (d.lookup_value ("time-travel", VariantType.VARDICT));
+                string path = tt.lookup_value ("path", VariantType.STRING).get_string ();
+                open_time_travel (path == "" ? null : path, tt.lookup_value ("versions", VariantType.BOOLEAN).get_boolean ());
+                if (time_travel == null) return;
+                var view = time_travel;
+                view.resume (tt.end ());
+                if (!view.started) {
+                    ulong id = view.notify["started"].connect (() => restore_migration.callback ());
+                    yield;
+                    view.disconnect (id);
+                }
+            }
+        }
+
         private void set_bubbles_visible (bool shown) {
             foreach (var b in new Button[] { back_bubble, start_bubble, browse_bubble, back_up_bubble, stop_bubble }) {
                 if (!shown) b.visible = false;

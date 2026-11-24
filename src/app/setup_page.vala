@@ -9,6 +9,7 @@ namespace Singularity.Backups {
 
         public BackupsApp app { get; construct; }
         public bool can_commit { get; private set; default = false; }
+        public string setup_kind { get { return kind; } }
 
         public signal void finished ();
         public signal void exclusions_requested ();

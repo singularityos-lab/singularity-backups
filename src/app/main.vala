@@ -1,12 +1,14 @@
 namespace Singularity.Backups {
 
-    public class BackupsApp : Singularity.Application {
+    public class BackupsApp : Singularity.Application, Singularity.Migration.Migratable {
         public DaemonProxy? daemon { get; private set; default = null; }
         public GLib.Settings settings { get; private set; }
 
         private BackupsWindow? window = null;
         private string? pending_browse = null;
         private string? pending_versions = null;
+
+        public bool daemon_checked { get; private set; default = false; }
 
         public signal void daemon_ready ();
 
@@ -88,6 +90,7 @@ namespace Singularity.Backups {
                     warning ("Backups: the backup service is not available: %s", e.message);
                 }
                 release ();
+                daemon_checked = true;
                 daemon_ready ();
             });
         }
@@ -131,13 +134,7 @@ namespace Singularity.Backups {
         }
 
         protected override void activate () {
-            if (window == null) {
-                window = new BackupsWindow (this);
-                window.close_request.connect (() => {
-                    window = null;
-                    return false;
-                });
-            }
+            if (window == null) adopt (new BackupsWindow (this));
             window.present ();
             if (pending_browse != null || pending_versions != null) {
                 string? b = pending_browse;
@@ -146,6 +143,38 @@ namespace Singularity.Backups {
                 pending_versions = null;
                 window.open_time_travel (v ?? b, v != null);
             }
+        }
+
+        private void adopt (BackupsWindow w) {
+            window = w;
+            w.close_request.connect (() => {
+                if (window == w) window = null;
+                return false;
+            });
+        }
+
+        public Variant save_model () {
+            return new VariantDict ().end ();
+        }
+
+        public async void restore_model (Variant model) throws Error {
+        }
+
+        public string window_kind (Gtk.Window w) {
+            return (w is BackupsWindow) ? "backups" : "";
+        }
+
+        public Variant save_window (Gtk.Window w) {
+            return ((BackupsWindow) w).save_migration ();
+        }
+
+        public async Gtk.Window? rebuild_window (string kind, Variant data) throws Error {
+            if (kind != "backups") return null;
+            if (window != null) window.destroy ();
+            var w = new BackupsWindow (this);
+            adopt (w);
+            yield w.restore_migration (data);
+            return w;
         }
 
         public static int main (string[] args) {
