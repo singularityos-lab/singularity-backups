@@ -82,6 +82,8 @@ namespace Singularity.Backups {
             set_accels_for_action ("win.back-up-now", { "<Control>b" });
             set_accels_for_action ("win.browse", { "<Control>t" });
 
+            BackupsIntents.install (this);
+
             hold ();
             Bus.get_proxy.begin<DaemonProxy> (BusType.SESSION, DAEMON_NAME, DAEMON_PATH, DBusProxyFlags.NONE, null, (o, r) => {
                 try {

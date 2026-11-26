@@ -26,6 +26,15 @@ configure_file(output: 'config.h', configuration: conf)
 config_inc = include_directories('.')
 config_vapi = files('src/common/config.vapi')
 
+libsingularity_dep = dependency('singularity-1.0',
+  fallback: ['libsingularity', 'libsingularity_dep']
+)
+
+if not meson.is_subproject() and libsingularity_dep.type_name() == 'internal'
+  libsingularity_vapi_dir = join_paths(meson.project_build_root(), 'subprojects', 'libsingularity')
+  add_project_arguments(['--vapidir=' + libsingularity_vapi_dir], language: 'vala')
+endif
+
 engine_deps = [glib_dep, gio_dep, gio_unix_dep, gee_dep, json_dep, posix_dep, sodium_dep]
 
 engine_sources = files(
@@ -76,15 +85,6 @@ executable('backups-perf',
 
 gtk_dep = dependency('gtk4')
 m_dep = meson.get_compiler('c').find_library('m', required: false)
-libsingularity_dep = dependency('singularity-1.0',
-  fallback: ['libsingularity', 'libsingularity_dep']
-)
-
-if not meson.is_subproject() and libsingularity_dep.type_name() == 'internal'
-  libsingularity_vapi_dir = join_paths(meson.project_build_root(), 'subprojects', 'libsingularity')
-  add_project_arguments(['--vapidir=' + libsingularity_vapi_dir], language: 'vala')
-endif
-
 executable('singularity-backups-daemon',
   [
     'src/daemon/main.vala',
@@ -128,6 +128,7 @@ install_data('data/backups.conf',
 executable('singularity-backups',
   [
     'src/app/main.vala',
+    'src/app/agent_intents.vala',
     'src/app/window.vala',
     'src/app/model.vala',
     'src/app/style.vala',
